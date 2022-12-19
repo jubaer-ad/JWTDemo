@@ -1,5 +1,8 @@
-﻿using JWTDemo.DBContext;
+﻿using Dapper;
+using JWTDemo.DBContext;
 using JWTDemo.Model;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using System.Data.Entity;
 using System.Linq.Expressions;
 
@@ -7,33 +10,29 @@ namespace JWTDemo.Repository
 {
 	public class AuthRepository : IAuthRepository
 	{
-		private readonly ApplicationDBContext _db;
+		//private readonly ApplicationDBContext _db;
+		private readonly IConfiguration _config;
 
-		public AuthRepository(ApplicationDBContext db)
+		public AuthRepository(IConfiguration config)
 		{
-			_db = db;
+			_config = config;
 		}
 
-		public async Task<User> GetUser(Expression<Func<User, bool>>? filter, bool tracked = false)
+		[HttpGet("{username}")]
+		public async Task<User> GetUser(string username)
 		{
-			IQueryable<User> query = _db.Set<User>();
-			if (!tracked) query = query.AsNoTracking();
-			if(filter != null)
-			{
-				query = query.Where(filter);
-			}
-			return await query.FirstOrDefaultAsync();
+			using var connection = new SqlConnection(_config.GetConnectionString("DefaultSQLConnection"));
+			return await connection.QueryFirstAsync("select * from Users where Username = @Username", new { Username = username });
 		}
 
 		public async Task Register(User user)
 		{
-			await _db.Users.AddAsync(user);
-			await SaveAsync();
+
 		}
 
 		public async Task SaveAsync()
 		{
-			await _db.SaveChangesAsync();
+
 		}
 	}
 }

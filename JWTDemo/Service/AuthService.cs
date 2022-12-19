@@ -20,15 +20,20 @@ namespace JWTDemo.Service
 
 		public async Task<User> Register(UserDto userDto)
 		{
-			CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
-			User user = new()
+			if (_authRepository.GetUser(userDto.Username) == null)
 			{
-				Username = userDto.Username,
-				PasswordHash = passwordHash,
-				PasswordSalt = passwordSalt
-			};
-			await _authRepository.Register(user);
-			return user;
+				CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+				User user = new()
+				{
+					Username = userDto.Username,
+					PasswordHash = passwordHash,
+					PasswordSalt = passwordSalt
+				};
+				await _authRepository.Register(user);
+				return user;
+			}
+			return "Username already exists!";
+			
 		}
 
 		public void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
@@ -42,7 +47,7 @@ namespace JWTDemo.Service
 
 		public async Task<User> GetUser(string username)
 		{
-			User user = await _authRepository.GetUser(string username);
+			
 		}
 	}
 }

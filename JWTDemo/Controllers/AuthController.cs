@@ -6,7 +6,7 @@ using System.Net;
 
 namespace JWTDemo.Controllers
 {
-	[Route("api/[controller]")]
+	[Route("api/Auth")]
 	[ApiController]
 	public class AuthController : ControllerBase
 	{
