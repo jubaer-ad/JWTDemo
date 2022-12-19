@@ -39,5 +39,10 @@ namespace JWTDemo.Service
 				passwordSalt = hmac.Key;
 			}
 		}
+
+		public async Task<User> GetUser(string username)
+		{
+			User user = await _authRepository.GetUser(string username);
+		}
 	}
 }

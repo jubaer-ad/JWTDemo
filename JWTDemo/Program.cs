@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using JWTDemo.DBContext;
+using JWTDemo;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +14,11 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDBContext>(opt =>
 {
-	opt.UseSqlServer();
-})
+	opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
+	opt.EnableSensitiveDataLogging();
+});
 
+builder.Services.AddCustomeServices();
 
 var app = builder.Build();
 

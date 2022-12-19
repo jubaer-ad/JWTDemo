@@ -1,5 +1,7 @@
 ﻿using JWTDemo.DBContext;
 using JWTDemo.Model;
+using System.Data.Entity;
+using System.Linq.Expressions;
 
 namespace JWTDemo.Repository
 {
@@ -11,6 +13,18 @@ namespace JWTDemo.Repository
 		{
 			_db = db;
 		}
+
+		public async Task<User> GetUser(Expression<Func<User, bool>>? filter, bool tracked = false)
+		{
+			IQueryable<User> query = _db.Set<User>();
+			if (!tracked) query = query.AsNoTracking();
+			if(filter != null)
+			{
+				query = query.Where(filter);
+			}
+			return await query.FirstOrDefaultAsync();
+		}
+
 		public async Task Register(User user)
 		{
 			await _db.Users.AddAsync(user);
