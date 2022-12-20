@@ -18,7 +18,7 @@ namespace JWTDemo.Service
 		}
 
 
-		public async Task<User> Register(UserDto userDto)
+		public async Task<User?> Register(UserDto userDto)
 		{
 			if (_authRepository.GetUser(userDto.Username) == null)
 			{
@@ -32,7 +32,7 @@ namespace JWTDemo.Service
 				await _authRepository.Register(user);
 				return user;
 			}
-			return "Username already exists!";
+			return null;
 			
 		}
 

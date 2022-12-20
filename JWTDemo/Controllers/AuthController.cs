@@ -1,4 +1,5 @@
-﻿using JWTDemo.Model;
+﻿using Azure.Core;
+using JWTDemo.Model;
 using JWTDemo.Model.Dto;
 using JWTDemo.Service;
 using Microsoft.AspNetCore.Mvc;
@@ -24,10 +25,57 @@ namespace JWTDemo.Controllers
 		{
 			try
 			{
-				User user = await _authService.Register(request);
+				if (_authService.GetUser(request.Username) == null)
+				{
+					User? user = await _authService.Register(request);
+					_response.statusCode = HttpStatusCode.OK;
+					_response.Result = user;
+				}
+				else
+				{
+					_response.statusCode = HttpStatusCode.BadRequest;
+					_response.IsSuccess = false;
+					_response.ErrorMessage = new List<string> { "Username already exists." };
+				}
+				return Ok(_response);
+				
+			} catch (Exception ex)
+			{
+				_response.statusCode = HttpStatusCode.BadRequest;
+				_response.IsSuccess = false;
+				_response.ErrorMessage = new List<string> { ex.Message.ToString() };
+			}
+			return Ok(_response);
+		}
+
+		[HttpGet("{username}")]
+		public async Task<User> GetUser(string username)
+		{
+			try
+			{
+				User user = await _authService.GetUser(username);
+				if (user != null) { P}
 				_response.statusCode = HttpStatusCode.OK;
 				_response.Result = user;
-			} catch (Exception ex)
+				return Ok(_response);
+
+
+				if (_authService.GetUser(request.Username) == null)
+				{
+					User? user = await _authService.Register(request);
+					_response.statusCode = HttpStatusCode.OK;
+					_response.Result = user;
+				}
+				else
+				{
+					_response.statusCode = HttpStatusCode.BadRequest;
+					_response.IsSuccess = false;
+					_response.ErrorMessage = new List<string> { "Username already exists." };
+				}
+				return Ok(_response);
+
+			}
+			catch (Exception ex)
 			{
 				_response.statusCode = HttpStatusCode.BadRequest;
 				_response.IsSuccess = false;
