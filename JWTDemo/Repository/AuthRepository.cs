@@ -1,11 +1,7 @@
 ﻿using Dapper;
-using JWTDemo.DBContext;
 using JWTDemo.Model;
 using JWTDemo.Model.Dto;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using System.Data.Entity;
-using System.Linq.Expressions;
 
 namespace JWTDemo.Repository
 {
@@ -19,27 +15,35 @@ namespace JWTDemo.Repository
 			_config = config;
 		}
 
-		public async Task<User> GetUser(string username)
+		public async Task<User?> GetUser(string username)
 		{
 			using var connection = new SqlConnection(_config.GetConnectionString("DefaultSQLConnection"));
-			return await connection.QueryFirstAsync("select * from Users where Username = @Username", new { Username = username });
+			var result = await connection.QueryAsync<User?>("select * from Users where Username = @Username", new { Username = username });
+			return result.FirstOrDefault();
 		}
 
-		public async Task<List<User>> GetUsers()
+		public async Task<IEnumerable<User>> GetUsers()
 		{
 			using var connection = new SqlConnection(_config.GetConnectionString("DefaultSQLConnection"));
-			return await connection.QueryFirstAsync("select * from Users");
+			return await connection.QueryAsync<User>("select * from Users");
 		}
 
 		public async Task Register(User user)
 		{
 			using var connection = new SqlConnection(_config.GetConnectionString("DefaultSQLConnection"));
-			await connection.ExecuteAsync("inser into Users (Username, PasswordHash, PasswordSalt) values (@Username, @PasswordHash, @PasswordSalt)", user);
+			await connection.ExecuteAsync("insert into Users (Username, PasswordHash, PasswordSalt) values (@Username, @PasswordHash, @PasswordSalt)", user);
 		}
 
-		public async Task SaveAsync()
+		public async Task Delete(string username)
 		{
+			using var connection = new SqlConnection(_config.GetConnectionString("DefaultSQLConnection"));
+			await connection.ExecuteAsync("DELETE FROM Users WHERE Username = @Username", new { Username = username });
+		}
 
+		public async Task Update(User user)
+		{
+			using var connection = new SqlConnection(_config.GetConnectionString("DefaultSQLConnection"));
+			await connection.ExecuteAsync("UPDATE Users SET Username = @Username, PasswordHash = @PasswordHash, PasswordSalt = @PasswordSalt WHERE Id = @Id)", user);
 		}
 	}
 }

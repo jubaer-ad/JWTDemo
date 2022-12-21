@@ -8,6 +8,8 @@ namespace JWTDemo.Service
 	{
 		Task<User?> Register(UserDto userDto);
 		void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt);
-		Task<User> GetUser(string username);
+		Task<User?> GetUser(string username);
+		Task<IEnumerable<User?>> GetUsers();
+		Task Delete(string username);
 	}
 }

@@ -1,10 +1,6 @@
-﻿using JWTDemo.DBContext;
-using JWTDemo.Model;
+﻿using JWTDemo.Model;
 using JWTDemo.Model.Dto;
 using JWTDemo.Repository;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using System.Security.Cryptography;
 
 namespace JWTDemo.Service
@@ -20,19 +16,15 @@ namespace JWTDemo.Service
 
 		public async Task<User?> Register(UserDto userDto)
 		{
-			if (_authRepository.GetUser(userDto.Username) == null)
+			CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+			User user = new()
 			{
-				CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
-				User user = new()
-				{
-					Username = userDto.Username,
-					PasswordHash = passwordHash,
-					PasswordSalt = passwordSalt
-				};
-				await _authRepository.Register(user);
-				return user;
-			}
-			return null;
+				Username = userDto.Username,
+				PasswordHash = passwordHash,
+				PasswordSalt = passwordSalt
+			};
+			await _authRepository.Register(user);
+			return user;
 			
 		}
 
@@ -45,9 +37,19 @@ namespace JWTDemo.Service
 			}
 		}
 
-		public async Task<User> GetUser(string username)
+		public async Task<User?> GetUser(string username)
 		{
-			
+			return await _authRepository.GetUser(username);
+		}
+
+		public async Task<IEnumerable<User?>> GetUsers()
+		{
+			return await _authRepository.GetUsers();
+		}
+
+		public async Task Delete(string username)
+		{
+			await _authRepository.Delete(username);
 		}
 	}
 }

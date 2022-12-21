@@ -21,15 +21,15 @@ namespace JWTDemo.Controllers
 		}
 
 		[HttpPost]
-		public async Task<ActionResult<Response>> Register(UserDto request)
+		public async Task<ActionResult<Response>> Register(UserDto userDto)
 		{
 			try
 			{
-				if (_authService.GetUser(request.Username) == null)
+				if (await _authService.GetUser(userDto.Username) == null)
 				{
-					User? user = await _authService.Register(request);
+					User? registeredUser = await _authService.Register(userDto);
 					_response.statusCode = HttpStatusCode.OK;
-					_response.Result = user;
+					_response.Result = registeredUser;
 				}
 				else
 				{
@@ -49,22 +49,44 @@ namespace JWTDemo.Controllers
 		}
 
 		[HttpGet("{username}")]
-		public async Task<User> GetUser(string username)
+		public async Task<ActionResult<Response>> GetUser(string username)
 		{
 			try
 			{
-				User user = await _authService.GetUser(username);
-				if (user != null) { P}
-				_response.statusCode = HttpStatusCode.OK;
-				_response.Result = user;
-				return Ok(_response);
-
-
-				if (_authService.GetUser(request.Username) == null)
+				User? user = await _authService.GetUser(username);
+				if (user != null)
 				{
-					User? user = await _authService.Register(request);
 					_response.statusCode = HttpStatusCode.OK;
 					_response.Result = user;
+					return Ok(_response);
+				}
+				else
+				{
+					_response.statusCode = HttpStatusCode.BadRequest;
+					_response.IsSuccess = false;
+					_response.ErrorMessage = new List<string> { "User not found." };
+				}
+			}
+			catch (Exception ex)
+			{
+				_response.statusCode = HttpStatusCode.BadRequest;
+				_response.IsSuccess = false;
+				_response.ErrorMessage = new List<string> { ex.Message.ToString() };
+			}
+			return Ok(_response);
+		}
+
+		[HttpPost]
+		[Route("update")]
+		public async Task<ActionResult<Response>> Update(UserDto userDto)
+		{
+			try
+			{
+				if (_authService.GetUser(userDto.Username) == null)
+				{
+					User? registeredUser = await _authService.Register(userDto);
+					_response.statusCode = HttpStatusCode.OK;
+					_response.Result = registeredUser;
 				}
 				else
 				{
@@ -73,7 +95,54 @@ namespace JWTDemo.Controllers
 					_response.ErrorMessage = new List<string> { "Username already exists." };
 				}
 				return Ok(_response);
+			}
+			catch (Exception ex)
+			{
+				return null;
+			}
+		}
 
+		[HttpGet]
+		public async Task<ActionResult<Response>> GetUsers()
+		{
+			try
+			{
+				IEnumerable<User?> retrievedUsers = await _authService.GetUsers();
+				if (retrievedUsers != null)
+				{
+					_response.statusCode = HttpStatusCode.OK;
+					_response.Result = retrievedUsers;
+					return Ok(_response);
+				}
+			}
+			catch (Exception ex)
+			{
+				_response.statusCode = HttpStatusCode.BadRequest;
+				_response.IsSuccess = false;
+				_response.ErrorMessage = new List<string> { ex.Message.ToString() };
+			}
+			return Ok(_response);
+		}
+
+		[HttpDelete]
+		public async Task<ActionResult<Response>> Delete(string username)
+		{
+			try
+			{
+				User? user = await _authService.GetUser(username);
+				if (user != null)
+				{
+					await _authService.Delete(username);
+					_response.statusCode = HttpStatusCode.OK;
+					_response.Result = user;
+					return Ok(_response);
+				}
+				else
+				{
+					_response.statusCode = HttpStatusCode.BadRequest;
+					_response.IsSuccess = false;
+					_response.ErrorMessage = new List<string> { "User not found." };
+				}
 			}
 			catch (Exception ex)
 			{
