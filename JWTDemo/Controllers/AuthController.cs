@@ -1,9 +1,7 @@
-﻿using JWTDemo.DBContext;
-using JWTDemo.Model;
+﻿using JWTDemo.Model;
 using JWTDemo.Model.Dto;
 using JWTDemo.Service;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace JWTDemo.Controllers
@@ -13,14 +11,12 @@ namespace JWTDemo.Controllers
 	public class AuthController : ControllerBase
 	{
 		private readonly IAuthService _authService;
-		private Response _response;
-		private readonly ApplicationDBContext _db;
+		private readonly Response _response;
 
-		public AuthController(IAuthService authService, ApplicationDBContext db)
+		public AuthController(IAuthService authService)
 		{
 			_authService = authService;
 			this._response = new();
-			_db = db;
 		}
 
 		[HttpPost]
@@ -84,8 +80,8 @@ namespace JWTDemo.Controllers
 		{
 			try
 			{
-				User? user = await _db.Users.AsNoTracking().Where(u => u.Id == id).FirstOrDefaultAsync();
-				if (user == null)
+				User? updatedUser = await _authService.Update(userDto, id);
+				if (updatedUser == null)
 				{
 					_response.statusCode = HttpStatusCode.BadRequest;
 					_response.IsSuccess = false;
@@ -93,7 +89,6 @@ namespace JWTDemo.Controllers
 				}
 				else
 				{
-					User? updatedUser = await _authService.Update(userDto, id);
 					_response.statusCode = HttpStatusCode.OK;
 					_response.Result = updatedUser;
 				}

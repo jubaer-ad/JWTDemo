@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JWTDemo.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20221219111241_initial")]
+    [Migration("20221221062551_initial")]
     partial class initial
     {
         /// <inheritdoc />
