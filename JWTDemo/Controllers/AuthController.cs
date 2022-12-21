@@ -1,6 +1,7 @@
 ﻿using JWTDemo.Model;
 using JWTDemo.Model.Dto;
 using JWTDemo.Service;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -154,9 +155,36 @@ namespace JWTDemo.Controllers
 		}
 
 		[HttpPost("login")]
-		public async Task<ActionResult<string>> Login(UserDto userDto)
+		public async Task<ActionResult<Response>> Login(UserDto userDto)
 		{
-			
+			try
+			{
+				string? jwt = await _authService.Login(userDto);
+				switch (jwt)
+				{
+					case "0":
+						_response.IsSuccess = false;
+						_response.ErrorMessage = new List<string> { "User not found." };
+						_response.statusCode = HttpStatusCode.BadRequest;
+						break;
+					case "1":
+						_response.IsSuccess = false;
+						_response.ErrorMessage = new List<string> { "Wrong password." };
+						_response.statusCode = HttpStatusCode.BadRequest;
+						break;
+					default:
+						_response.statusCode = HttpStatusCode.OK;
+						_response.Result = jwt;
+						break;
+				}
+			}
+			catch (Exception ex)
+			{
+				_response.statusCode = HttpStatusCode.BadRequest;
+				_response.IsSuccess = false;
+				_response.ErrorMessage = new List<string> { ex.Message.ToString() };
+			}
+			return _response;
 		}
 
 	}

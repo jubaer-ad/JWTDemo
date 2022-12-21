@@ -5,6 +5,8 @@ using JWTDemo.Repository;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 
 namespace JWTDemo.Service
 {
@@ -47,7 +49,16 @@ namespace JWTDemo.Service
 		{
 			using var hamc = new HMACSHA512(passwordSalt);
 			var computedPasswordHash = hamc.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-			return computedPasswordHash == passwordHash;
+			//for(int i = 0; i < passwordHash.Length; i++)
+			//{
+			//	bool flag = passwordHash[i] == computedPasswordHash[i];
+			//	if(flag)
+			//		Console.ForegroundColor = ConsoleColor.Blue;
+			//	else
+			//		Console.ForegroundColor = ConsoleColor.Red;
+			//	Console.WriteLine(passwordHash[i] + " : " + computedPasswordHash[i] + " " + flag);
+			//}
+			return computedPasswordHash.SequenceEqual(passwordHash);
 		}
 
 		public async Task<User?> GetUser(string username)
@@ -82,9 +93,9 @@ namespace JWTDemo.Service
 		{
 			User? user = await _authRepository.GetUser(userDto.Username);
 			if (user == null)
-				return "User not found.";
+				return "0";
 			if (!VerifyPassword(userDto.Password, user.PasswordHash, user.PasswordSalt))
-				return "Wrong password.";
+				return "1";
 			return CreateToken(user);
 		}
 
@@ -96,7 +107,9 @@ namespace JWTDemo.Service
 			};
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
 			var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-			var token = 
+			var expires = DateTime.Now.AddDays(1);
+			var token = new JwtSecurityToken(claims: claims, signingCredentials: credentials, expires:expires);
+			return new JwtSecurityTokenHandler().WriteToken(token);
 		}
 	}
 }
