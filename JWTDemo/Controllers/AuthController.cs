@@ -1,8 +1,9 @@
-﻿using Azure.Core;
+﻿using JWTDemo.DBContext;
 using JWTDemo.Model;
 using JWTDemo.Model.Dto;
 using JWTDemo.Service;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace JWTDemo.Controllers
@@ -13,11 +14,13 @@ namespace JWTDemo.Controllers
 	{
 		private readonly IAuthService _authService;
 		private Response _response;
+		private readonly ApplicationDBContext _db;
 
-		public AuthController(IAuthService authService)
+		public AuthController(IAuthService authService, ApplicationDBContext db)
 		{
 			_authService = authService;
 			this._response = new();
+			_db = db;
 		}
 
 		[HttpPost]
@@ -76,30 +79,32 @@ namespace JWTDemo.Controllers
 			return Ok(_response);
 		}
 
-		[HttpPost]
-		[Route("update")]
-		public async Task<ActionResult<Response>> Update(UserDto userDto)
+		[HttpPut]
+		public async Task<ActionResult<Response>> Update(UserDto userDto, int id)
 		{
 			try
 			{
-				if (_authService.GetUser(userDto.Username) == null)
-				{
-					User? registeredUser = await _authService.Register(userDto);
-					_response.statusCode = HttpStatusCode.OK;
-					_response.Result = registeredUser;
-				}
-				else
+				User? user = await _db.Users.AsNoTracking().Where(u => u.Id == id).FirstOrDefaultAsync();
+				if (user == null)
 				{
 					_response.statusCode = HttpStatusCode.BadRequest;
 					_response.IsSuccess = false;
-					_response.ErrorMessage = new List<string> { "Username already exists." };
+					_response.ErrorMessage = new List<string> { "User not found." };
 				}
-				return Ok(_response);
+				else
+				{
+					User? updatedUser = await _authService.Update(userDto, id);
+					_response.statusCode = HttpStatusCode.OK;
+					_response.Result = updatedUser;
+				}
 			}
 			catch (Exception ex)
 			{
-				return null;
+				_response.statusCode = HttpStatusCode.BadRequest;
+				_response.IsSuccess = false;
+				_response.ErrorMessage = new List<string> { ex.Message.ToString() };
 			}
+			return Ok(_response);
 		}
 
 		[HttpGet]

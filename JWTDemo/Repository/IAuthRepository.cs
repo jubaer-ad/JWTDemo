@@ -9,6 +9,6 @@ namespace JWTDemo.Repository
 		Task<User?> GetUser(string username);
 		Task<IEnumerable<User>> GetUsers();
 		Task Delete(string username);
-		Task Update(User user);
+		Task Update(User user, int id);
 	}
 }

@@ -51,5 +51,18 @@ namespace JWTDemo.Service
 		{
 			await _authRepository.Delete(username);
 		}
+
+		public async Task<User> Update(UserDto userDto, int id)
+		{
+			CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+			User user = new()
+			{
+				Username = userDto.Username,
+				PasswordHash = passwordHash,
+				PasswordSalt = passwordSalt
+			};
+			await _authRepository.Update(user, id);
+			return user;
+		}
 	}
 }

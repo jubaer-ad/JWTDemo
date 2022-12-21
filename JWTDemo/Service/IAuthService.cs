@@ -11,5 +11,6 @@ namespace JWTDemo.Service
 		Task<User?> GetUser(string username);
 		Task<IEnumerable<User?>> GetUsers();
 		Task Delete(string username);
+		Task<User> Update(UserDto userDto, int id);
 	}
 }

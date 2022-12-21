@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using JWTDemo.Model;
 using JWTDemo.Model.Dto;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 
 namespace JWTDemo.Repository
@@ -40,10 +41,11 @@ namespace JWTDemo.Repository
 			await connection.ExecuteAsync("DELETE FROM Users WHERE Username = @Username", new { Username = username });
 		}
 
-		public async Task Update(User user)
+		public async Task Update(User user, int id)
 		{
 			using var connection = new SqlConnection(_config.GetConnectionString("DefaultSQLConnection"));
-			await connection.ExecuteAsync("UPDATE Users SET Username = @Username, PasswordHash = @PasswordHash, PasswordSalt = @PasswordSalt WHERE Id = @Id)", user);
+			await connection.ExecuteAsync("UPDATE Users SET Username = @Username, PasswordHash = @PasswordHash, PasswordSalt = @PasswordSalt WHERE Id = @Id",
+				new { user.Username, user.PasswordHash, user.PasswordSalt, Id = id });
 		}
 	}
 }
