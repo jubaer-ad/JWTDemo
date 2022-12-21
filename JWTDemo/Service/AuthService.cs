@@ -1,16 +1,22 @@
-﻿using JWTDemo.Model;
+﻿using Azure;
+using JWTDemo.Model;
 using JWTDemo.Model.Dto;
 using JWTDemo.Repository;
-using System.Security.Cryptography;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Security.Claims;
 
 namespace JWTDemo.Service
 {
 	public class AuthService : IAuthService
 	{
 		private readonly IAuthRepository _authRepository;
-		public AuthService(IAuthRepository authRepository)
+		private readonly string _secretKey;
+
+		public AuthService(IAuthRepository authRepository, IConfiguration config)
 		{
 			_authRepository = authRepository;
+			_secretKey = config.GetValue<string>("AppSecurity:Secret") ?? "default_at_least_sixteen_chars_secret_key";
 		}
 
 
@@ -35,6 +41,13 @@ namespace JWTDemo.Service
 				passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
 				passwordSalt = hmac.Key;
 			}
+		}
+
+		public bool VerifyPassword(string password, byte[] passwordHash, byte[] passwordSalt)
+		{
+			using var hamc = new HMACSHA512(passwordSalt);
+			var computedPasswordHash = hamc.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+			return computedPasswordHash == passwordHash;
 		}
 
 		public async Task<User?> GetUser(string username)
@@ -63,6 +76,27 @@ namespace JWTDemo.Service
 			};
 			User? updatedUser = await _authRepository.Update(user, id);
 			return updatedUser;
+		}
+
+		public async Task<string?> Login(UserDto userDto)
+		{
+			User? user = await _authRepository.GetUser(userDto.Username);
+			if (user == null)
+				return "User not found.";
+			if (!VerifyPassword(userDto.Password, user.PasswordHash, user.PasswordSalt))
+				return "Wrong password.";
+			return CreateToken(user);
+		}
+
+		private string? CreateToken(User user)
+		{
+			List<Claim> claims = new()
+			{
+				new Claim(ClaimTypes.Name, user.Username)
+			};
+			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+			var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+			var token = 
 		}
 	}
 }
